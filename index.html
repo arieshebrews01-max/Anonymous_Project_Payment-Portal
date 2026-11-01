@@ -1,4 +1,4 @@
-```html
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -124,6 +124,14 @@ h2{font-size:clamp(1.7rem,4.5vw,2.5rem);font-weight:900;margin-bottom:16px}
 .order-help{font-size:.85rem;color:var(--muted);margin-top:5px}
 .order-form .btn{width:100%;text-align:center}
 .form-error{color:#b42318;font-size:.9rem;display:none}
+.location-detail{display:none}
+
+/* DONATION */
+.donation{margin-top:44px;padding:30px;background:var(--paper);border:1px solid var(--line);border-radius:22px;text-align:center}
+.donation h2{font-size:clamp(1.5rem,4vw,2rem);margin-bottom:12px}
+.donation p{max-width:62ch;margin:0 auto 16px;color:#2b2925}
+.donation .donation-note{font-size:.9rem;color:var(--muted);margin-top:12px;margin-bottom:0}
+.donation .btn{margin-top:8px}
 
 /* FINAL + FOOTER */
 .final{text-align:center}
@@ -141,6 +149,7 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
 }
 @media(max-width:460px){
   .shirtgrid{gap:10px}
+  .donation{padding:24px 18px}
 }
 </style>
 </head>
@@ -283,7 +292,7 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
         <ol class="steps">
           <li><div><b>Choose your shirt</b><span>Select your size and quantity.</span></div></li>
           <li><div><b>Scan a QR and pay</b><span>Use Maya, GCash, or an app that supports the QR you picked. Pay the total shown.</span></div></li>
-          <li><div><b>Send your order and receipt</b><span>Enter your name and payment method below. Messenger will open with your order details. Attach your payment screenshot in the chat.</span></div></li>
+          <li><div><b>Send your order and receipt</b><span>Enter your name, location, and payment method below. Messenger will open with your order details. Attach your payment screenshot in the chat.</span></div></li>
         </ol>
 
         <form class="order-form" id="orderForm">
@@ -302,6 +311,25 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
             </select>
           </div>
 
+          <div class="field">
+            <label for="buyerLocation">Where are you located?</label>
+            <select id="buyerLocation" name="buyerLocation" required>
+              <option value="">Choose your location</option>
+              <option value="Philippines">Philippines</option>
+              <option value="Europe">Europe</option>
+            </select>
+          </div>
+
+          <div class="field location-detail" id="philippinesDetail">
+            <label for="buyerCityProvince">City / Province</label>
+            <input id="buyerCityProvince" name="buyerCityProvince" type="text" placeholder="Enter your city or province" maxlength="100">
+          </div>
+
+          <div class="field location-detail" id="europeDetail">
+            <label for="buyerCountry">Country</label>
+            <input id="buyerCountry" name="buyerCountry" type="text" placeholder="Enter your country" maxlength="100">
+          </div>
+
           <p class="form-error" id="formError" role="alert"></p>
 
           <button class="btn" type="submit">Order via Messenger</button>
@@ -310,6 +338,17 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
         <div class="note">💛 Proceeds go to food and basic necessities for our outreach. We will post photos and an update on our Facebook page after we visit.</div>
       </div>
     </div>
+
+    <!-- DIRECT DONATION: uses the same QR codes above -->
+    <div class="donation">
+      <div class="kicker">Another way to help</div>
+      <h2>Don't want a shirt? You can still donate.</h2>
+      <p>You can support Anonymous Project through a direct donation instead. Any amount is welcome. Every contribution will help us provide food and basic necessities to people in need.</p>
+      <p><strong>Simply scan either the GCash or Maya QR code above and enter the amount you wish to give.</strong></p>
+      <button class="btn sun" id="donationBtn" type="button">Confirm Donation via Messenger</button>
+      <p class="donation-note">After sending your donation, use the button above to message us and attach your payment screenshot. No minimum donation. Every contribution counts.</p>
+    </div>
+
   </div>
 </section>
 
@@ -394,6 +433,26 @@ document.querySelectorAll(".copy").forEach(btn => {
   });
 });
 
+/* SHOW THE RELEVANT LOCATION FIELD */
+$("buyerLocation").addEventListener("change", () => {
+  const location = $("buyerLocation").value;
+
+  $("philippinesDetail").style.display =
+    location === "Philippines" ? "block" : "none";
+
+  $("europeDetail").style.display =
+    location === "Europe" ? "block" : "none";
+
+  $("buyerCityProvince").required = location === "Philippines";
+  $("buyerCountry").required = location === "Europe";
+
+  $("buyerCityProvince").value = "";
+  $("buyerCountry").value = "";
+
+  $("formError").style.display = "none";
+  $("formError").textContent = "";
+});
+
 /* ORDER VIA MESSENGER */
 $("orderForm").addEventListener("submit", event => {
   event.preventDefault();
@@ -406,6 +465,9 @@ $("orderForm").addEventListener("submit", event => {
   const size = sizeField ? sizeField.value.trim() : "";
 
   const payment = $("paymentMethod").value;
+  const location = $("buyerLocation").value;
+  const cityProvince = $("buyerCityProvince").value.trim();
+  const country = $("buyerCountry").value.trim();
   const total = qty * CONFIG.price;
   const error = $("formError");
 
@@ -419,7 +481,7 @@ $("orderForm").addEventListener("submit", event => {
     return;
   }
 
-  if (!size) {
+  if (!size || !CONFIG.sizes.includes(size)) {
     error.textContent = "Please select your shirt size.";
     error.style.display = "block";
     $("shirtSize").focus();
@@ -433,6 +495,31 @@ $("orderForm").addEventListener("submit", event => {
     return;
   }
 
+  if (!location) {
+    error.textContent = "Please choose your location.";
+    error.style.display = "block";
+    $("buyerLocation").focus();
+    return;
+  }
+
+  if (location === "Philippines" && !cityProvince) {
+    error.textContent = "Please enter your city or province.";
+    error.style.display = "block";
+    $("buyerCityProvince").focus();
+    return;
+  }
+
+  if (location === "Europe" && !country) {
+    error.textContent = "Please enter your country.";
+    error.style.display = "block";
+    $("buyerCountry").focus();
+    return;
+  }
+
+  const locationDetails = location === "Philippines"
+    ? "Location: Philippines\nCity / Province: " + cityProvince
+    : "Location: Europe\nCountry: " + country;
+
   const message = [
     "Hi! I'd like to place an order from Anonymous Project.",
     "",
@@ -443,8 +530,25 @@ $("orderForm").addEventListener("submit", event => {
     "Price per shirt: " + peso(CONFIG.price),
     "Total amount: " + peso(total),
     "Payment method: " + payment,
+    locationDetails,
     "",
     "I have made my payment. I'll attach my payment receipt here.",
+    "Thank you!"
+  ].join("\n");
+
+  const messengerLink = CONFIG.messengerURL + "?text=" + encodeURIComponent(message);
+
+  window.open(messengerLink, "_blank", "noopener,noreferrer");
+});
+
+/* DONATION CONFIRMATION VIA MESSENGER */
+$("donationBtn").addEventListener("click", () => {
+  const message = [
+    "Hello! I made a direct donation to Anonymous Project.",
+    "",
+    "Donation amount: ",
+    "",
+    "I'll attach my payment screenshot here.",
     "Thank you!"
   ].join("\n");
 
@@ -482,4 +586,3 @@ draw();
 
 </body>
 </html>
-```
