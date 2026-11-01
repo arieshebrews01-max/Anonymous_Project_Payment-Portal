@@ -123,12 +123,26 @@ h2{font-size:clamp(1.7rem,4.5vw,2.5rem);font-weight:900;margin-bottom:16px}
 .field input,.field select{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;font:inherit;background:#fff;color:var(--ink)}
 .field input:focus,.field select:focus{outline:2px solid var(--sun);border-color:var(--sun)}
 
-/* RED VALIDATION STYLE FOR SHIRT SIZE */
-.field select.invalid{
-  border:2px solid #dc2626;
-  background:#fee2e2;
-  color:#dc2626;
-  outline:2px solid #dc2626;
+/* SHIRT SIZE ERROR - FORCE RED */
+.field select.invalid,
+.field select.invalid:focus,
+.field select.invalid:hover{
+  border:3px solid #dc2626 !important;
+  background:#fee2e2 !important;
+  color:#b91c1c !important;
+  outline:3px solid #dc2626 !important;
+  outline-offset:1px;
+  box-shadow:0 0 0 4px rgba(220,38,38,.25) !important;
+}
+
+.field select.invalid option{
+  background:#fff;
+  color:#0d0d0d;
+}
+
+/* HIDE COMPLETE ADDRESS UNTIL LOCATION IS SELECTED */
+.location-detail{
+  display:none;
 }
 
 .order-help{font-size:.85rem;color:var(--muted);margin-top:5px}
@@ -197,7 +211,6 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
   </div>
 </div>
 
-<!-- 1. CAMPAIGN INTRODUCTION -->
 <section>
   <div class="wrap two">
     <div class="story">
@@ -225,7 +238,6 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
   </div>
 </section>
 
-<!-- 2. T-SHIRT DESIGNS -->
 <section class="shirt">
   <div class="wrap">
     <div class="kicker">The shirt</div>
@@ -239,7 +251,6 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
   </div>
 </section>
 
-<!-- 3. DONATION SECTION -->
 <section class="donation">
   <div class="wrap">
     <div class="donation-inner">
@@ -253,7 +264,6 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
   </div>
 </section>
 
-<!-- 4. PAYMENT SECTION -->
 <section class="pay" id="pay">
   <div class="wrap">
     <div class="kicker">Payment methods</div>
@@ -292,7 +302,6 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
   </div>
 </section>
 
-<!-- 5. SHIRT ORDER SECTION -->
 <section class="pay" id="order">
   <div class="wrap">
     <div class="kicker">Shirt pre-order</div>
@@ -303,7 +312,6 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
       <div>
         <div class="price">₱550 <small>per shirt</small></div>
 
-        <!-- SHIRT SIZE: stays in its original left-side position -->
         <div class="field" style="margin:12px 0 16px">
           <label for="shirtSize">Choose your shirt size</label>
           <select id="shirtSize" name="shirtSize" form="orderForm" required>
@@ -334,7 +342,8 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
           <li><div><b>Send your order and receipt</b><span>Enter your name, location, complete address, and payment method below. Messenger will open with your order details. Attach your payment screenshot in the chat.</span></div></li>
         </ol>
 
-        <form class="order-form" id="orderForm">
+        <!-- novalidate lets the custom validation show the red size dropdown -->
+        <form class="order-form" id="orderForm" novalidate>
           <div class="field">
             <label for="customerName">Your name</label>
             <input id="customerName" name="customerName" type="text" placeholder="Enter your full name" maxlength="80" required>
@@ -457,7 +466,7 @@ document.querySelectorAll(".copy").forEach(btn => {
   });
 });
 
-/* SHOW COMPLETE ADDRESS FIELD */
+/* SHOW COMPLETE ADDRESS ONLY AFTER LOCATION IS SELECTED */
 $("buyerLocation").addEventListener("change", () => {
   const location = $("buyerLocation").value;
 
@@ -465,16 +474,21 @@ $("buyerLocation").addEventListener("change", () => {
   $("buyerAddress").required = location !== "";
   $("buyerAddress").value = "";
 
-  $("formError").style.display = "none";
-  $("formError").textContent = "";
+  clearFormError();
 });
 
-/* CLEAR FORM ERRORS WHEN CORRECTED */
+/* FORM ERROR HELPERS */
 const clearFormError = () => {
   $("formError").textContent = "";
   $("formError").style.display = "none";
 };
 
+const showFormError = message => {
+  $("formError").textContent = message;
+  $("formError").style.display = "block";
+};
+
+/* CLEAR SHIRT SIZE ERROR WHEN A SIZE IS SELECTED */
 $("shirtSize").addEventListener("change", () => {
   if ($("shirtSize").value !== "") {
     $("shirtSize").classList.remove("invalid");
@@ -482,68 +496,56 @@ $("shirtSize").addEventListener("change", () => {
   }
 });
 
-$("customerName").addEventListener("input", () => {
-  if ($("customerName").value.trim() !== "") clearFormError();
-});
-
-$("paymentMethod").addEventListener("change", () => {
-  if ($("paymentMethod").value !== "") clearFormError();
-});
-
-$("buyerAddress").addEventListener("input", () => {
-  if ($("buyerAddress").value.trim() !== "") clearFormError();
-});
+$("customerName").addEventListener("input", clearFormError);
+$("paymentMethod").addEventListener("change", clearFormError);
+$("buyerAddress").addEventListener("input", clearFormError);
 
 /* ORDER VIA MESSENGER */
 $("orderForm").addEventListener("submit", event => {
   event.preventDefault();
 
   const name = $("customerName").value.trim();
-
-  // The size dropdown stays in its original left-side position.
   const size = $("shirtSize").value.trim();
-
   const payment = $("paymentMethod").value;
   const location = $("buyerLocation").value;
   const address = $("buyerAddress").value.trim();
   const total = qty * CONFIG.price;
-  const error = $("formError");
+
+  const sizeSelect = $("shirtSize");
 
   clearFormError();
-  $("shirtSize").classList.remove("invalid");
+  sizeSelect.classList.remove("invalid");
+
+  /* CHECK SIZE FIRST SO IT TURNS RED EVEN IF OTHER FIELDS ARE EMPTY */
+  if (!size || !CONFIG.sizes.includes(size)) {
+    sizeSelect.classList.add("invalid");
+    showFormError("Please select your shirt size.");
+
+    sizeSelect.scrollIntoView({behavior:"smooth", block:"center"});
+    sizeSelect.focus();
+    return;
+  }
 
   if (!name) {
-    error.textContent = "Please enter your name.";
-    error.style.display = "block";
+    showFormError("Please enter your name.");
     $("customerName").focus();
     return;
   }
 
-  if (!size || !CONFIG.sizes.includes(size)) {
-    error.textContent = "Please select your shirt size.";
-    error.style.display = "block";
-    $("shirtSize").classList.add("invalid");
-    $("shirtSize").focus();
-    return;
-  }
-
   if (!payment) {
-    error.textContent = "Please choose your payment method.";
-    error.style.display = "block";
+    showFormError("Please choose your payment method.");
     $("paymentMethod").focus();
     return;
   }
 
   if (!location) {
-    error.textContent = "Please choose your location.";
-    error.style.display = "block";
+    showFormError("Please choose your location.");
     $("buyerLocation").focus();
     return;
   }
 
   if (!address) {
-    error.textContent = "Please enter your complete address.";
-    error.style.display = "block";
+    showFormError("Please enter your complete address.");
     $("buyerAddress").focus();
     return;
   }
