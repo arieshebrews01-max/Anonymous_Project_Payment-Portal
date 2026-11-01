@@ -255,10 +255,10 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
       <div>
         <div class="price">₱550 <small>per shirt</small></div>
 
-        <!-- SHIRT SIZE: kept in its original left-side position -->
+        <!-- SHIRT SIZE: stays in its original left-side position -->
         <div class="field" style="margin:12px 0 16px">
           <label for="shirtSize">Choose your shirt size</label>
-          <select id="shirtSize" name="shirtSize">
+          <select id="shirtSize" name="shirtSize" form="orderForm" required>
             <option value="">Select a size</option>
             <option value="S">Small (S)</option>
             <option value="M">Medium (M)</option>
@@ -399,8 +399,12 @@ $("orderForm").addEventListener("submit", event => {
   event.preventDefault();
 
   const name = $("customerName").value.trim();
-  const sizeField = $("shirtSize");
+
+  // Get the shirt size from the form-associated dropdown.
+  // The dropdown stays visually on the left side of the page.
+  const sizeField = $("orderForm").elements.namedItem("shirtSize");
   const size = sizeField ? sizeField.value.trim() : "";
+
   const payment = $("paymentMethod").value;
   const total = qty * CONFIG.price;
   const error = $("formError");
@@ -418,7 +422,7 @@ $("orderForm").addEventListener("submit", event => {
   if (!size) {
     error.textContent = "Please select your shirt size.";
     error.style.display = "block";
-    sizeField.focus();
+    $("shirtSize").focus();
     return;
   }
 
