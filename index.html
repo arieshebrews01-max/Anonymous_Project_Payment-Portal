@@ -122,9 +122,18 @@ h2{font-size:clamp(1.7rem,4.5vw,2.5rem);font-weight:900;margin-bottom:16px}
 .field label{display:block;font-weight:700;font-size:.9rem;margin-bottom:6px}
 .field input,.field select{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;font:inherit;background:#fff;color:var(--ink)}
 .field input:focus,.field select:focus{outline:2px solid var(--sun);border-color:var(--sun)}
+
+/* RED VALIDATION STYLE FOR SHIRT SIZE */
+.field select.invalid{
+  border:2px solid #dc2626;
+  background:#fee2e2;
+  color:#dc2626;
+  outline:2px solid #dc2626;
+}
+
 .order-help{font-size:.85rem;color:var(--muted);margin-top:5px}
 .order-form .btn{width:100%;text-align:center}
-.form-error{color:#b42318;font-size:.9rem;display:none}
+.form-error{color:#dc2626;font-size:.9rem;font-weight:700;display:none}
 
 /* DONATION */
 .donation{padding:40px 0;background:#fff;border-bottom:1px solid var(--line)}
@@ -467,7 +476,10 @@ const clearFormError = () => {
 };
 
 $("shirtSize").addEventListener("change", () => {
-  if ($("shirtSize").value !== "") clearFormError();
+  if ($("shirtSize").value !== "") {
+    $("shirtSize").classList.remove("invalid");
+    clearFormError();
+  }
 });
 
 $("customerName").addEventListener("input", () => {
@@ -498,6 +510,7 @@ $("orderForm").addEventListener("submit", event => {
   const error = $("formError");
 
   clearFormError();
+  $("shirtSize").classList.remove("invalid");
 
   if (!name) {
     error.textContent = "Please enter your name.";
@@ -509,6 +522,7 @@ $("orderForm").addEventListener("submit", event => {
   if (!size || !CONFIG.sizes.includes(size)) {
     error.textContent = "Please select your shirt size.";
     error.style.display = "block";
+    $("shirtSize").classList.add("invalid");
     $("shirtSize").focus();
     return;
   }
