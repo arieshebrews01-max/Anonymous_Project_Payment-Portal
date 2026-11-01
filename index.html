@@ -232,13 +232,13 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
           <div class="qrph">QR 1 image not found. Save it as <code>qr1.png</code> next to this page.</div>
         </div>
         <div class="acct">
-         <div><strong>Shandie Mae Carpe</strong> · @shandies</div>
+          <div><strong>Shandie Mae Carpe</strong> · @shandies</div>
           <button class="copy" type="button" data-copy="@shandiemae">Copy username</button>
         </div>
       </div>
 
       <div class="qrcard">
-        <h3>Option 2 </h3>
+        <h3>Option 2</h3>
         <div class="qrframe">
           <img src="qr2.png" alt="Maya QR code for Shandie Mae Carpe"
                onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
@@ -255,18 +255,6 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
       <div>
         <div class="price">₱550 <small>per shirt</small></div>
 
-        <div class="field" style="margin:12px 0 16px">
-          <label for="shirtSize">Choose your shirt size</label>
-          <select id="shirtSize">
-            <option value="">Select a size</option>
-            <option value="S">Small (S)</option>
-            <option value="M">Medium (M)</option>
-            <option value="L">Large (L)</option>
-            <option value="XL">Extra Large (XL)</option>
-            <option value="2XL">2XL</option>
-          </select>
-        </div>
-
         <div class="calc">
           <div class="qty">
             <button type="button" id="minus" aria-label="Fewer shirts">−</button>
@@ -282,10 +270,22 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
         <ol class="steps">
           <li><div><b>Choose your shirt</b><span>Select your size and quantity.</span></div></li>
           <li><div><b>Scan a QR and pay</b><span>Use Maya, GCash, or an app that supports the QR you picked. Pay the total shown.</span></div></li>
-          <li><div><b>Send your order and receipt</b><span>Enter your name and payment method below. Messenger will open with your order details. Attach your payment screenshot in the chat.</span></div></li>
+          <li><div><b>Send your order and receipt</b><span>Enter your name, size, and payment method below. Messenger will open with your order details. Attach your payment screenshot in the chat.</span></div></li>
         </ol>
 
         <form class="order-form" id="orderForm">
+          <div class="field">
+            <label for="shirtSize">Choose your shirt size</label>
+            <select id="shirtSize" name="shirtSize" required>
+              <option value="" selected disabled>Select a size</option>
+              <option value="S">Small (S)</option>
+              <option value="M">Medium (M)</option>
+              <option value="L">Large (L)</option>
+              <option value="XL">Extra Large (XL)</option>
+              <option value="2XL">2XL</option>
+            </select>
+          </div>
+
           <div class="field">
             <label for="customerName">Your name</label>
             <input id="customerName" name="customerName" type="text" placeholder="Enter your full name" maxlength="80" required>
@@ -294,7 +294,7 @@ footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin
           <div class="field">
             <label for="paymentMethod">Payment method</label>
             <select id="paymentMethod" name="paymentMethod" required>
-              <option value="">Choose payment method</option>
+              <option value="" selected disabled>Choose payment method</option>
               <option value="GCash">GCash</option>
               <option value="Maya">Maya</option>
               <option value="Other">Other</option>
@@ -398,7 +398,7 @@ $("orderForm").addEventListener("submit", event => {
   event.preventDefault();
 
   const name = $("customerName").value.trim();
-  const size = $("shirtSize").value;
+  const size = $("orderForm").elements.namedItem("shirtSize").value.trim();
   const payment = $("paymentMethod").value;
   const total = qty * CONFIG.price;
   const error = $("formError");
@@ -416,7 +416,7 @@ $("orderForm").addEventListener("submit", event => {
   if (!size) {
     error.textContent = "Please select your shirt size.";
     error.style.display = "block";
-    $("shirtSize").focus();
+    $("orderForm").elements.namedItem("shirtSize").focus();
     return;
   }
 
@@ -476,3 +476,4 @@ draw();
 
 </body>
 </html>
+```
