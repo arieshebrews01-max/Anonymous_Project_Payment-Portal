@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -177,7 +178,7 @@
     <div class="story">
       <div class="kicker">Why we are doing this</div>
       <h2>Some people go to sleep hungry tonight. We can change that.</h2>
-      <p>We are a group of friends who believe help should not wait for a perfect moment.
+      <p>We are a group of people who believe help should not wait for a perfect moment.
          So we made a shirt, and we are using it to fund something real.</p>
       <p>Before the year ends, our team will visit an <b>Indigenous community</b> and share food and
          basic necessities with its members, and reach out to people on the street who have no home.
@@ -284,6 +285,9 @@
     <h2>Small shirt. Big heart.</h2>
     <p>Can’t buy a shirt right now? Sharing this page helps just as much. Send it to one friend today.</p>
     <button class="btn" id="shareBtn" type="button">Share this page</button>
+    <p id="shareMessage" style="display:none; margin:14px auto 0; color:#267a38; font-weight:600;">
+      Link copied! You can send it to your friends.
+    </p>
   </div>
 </section>
 
@@ -301,13 +305,13 @@ const CONFIG = {
   price: 500,
   sizes: ["S","M","L","XL","2XL"],
   goalAmount: 50000,
-  raisedAmount: 0,        // update as money comes in
-  shirtsSold: 0,          // update as orders come in
+  raisedAmount: 0,
+  shirtsSold: 0,
   deadline: "2026-12-31"
 };
 /* ====================== */
 
-const SHARE_URL = "https://www.facebook.com/profile.php?id=61596242784817"; // link the Share button sends
+const SHARE_URL = window.location.href;
 const peso = n => "₱" + Number(n).toLocaleString("en-PH");
 const $ = id => document.getElementById(id);
 
@@ -331,15 +335,38 @@ draw();
 
 document.querySelectorAll(".copy").forEach(btn => btn.addEventListener("click", async () => {
   const old = btn.textContent;
-  try { await navigator.clipboard.writeText(btn.dataset.copy); btn.textContent = "Copied ✓"; }
-  catch { btn.textContent = "Copy it from the QR"; }
+  try {
+    await navigator.clipboard.writeText(btn.dataset.copy);
+    btn.textContent = "Copied ✓";
+  } catch {
+    btn.textContent = "Copy it from the QR";
+  }
   setTimeout(() => btn.textContent = old, 2000);
 }));
 
+/* SHARE PAGE: copy the actual website URL */
 $("shareBtn").addEventListener("click", async () => {
-  const data = { title: "Anonymous Project: Wear the shirt, feed a neighbor", text: "Pre-order a shirt and help us share food with an Indigenous community.", url: SHARE_URL };
-  if (navigator.share) { try { await navigator.share(data); } catch {} }
-  else { try { await navigator.clipboard.writeText(SHARE_URL); $("shareBtn").textContent = "Link copied ✓"; } catch {} }
+  const btn = $("shareBtn");
+  const message = $("shareMessage");
+  const originalText = "Share this page";
+
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+
+    btn.textContent = "Link copied ✓";
+    message.style.display = "block";
+    message.textContent = "Link copied! You can send it to your friends.";
+
+    setTimeout(() => {
+      btn.textContent = originalText;
+      message.style.display = "none";
+    }, 3000);
+
+  } catch (error) {
+    message.style.display = "block";
+    message.style.color = "#c0392b";
+    message.textContent = "Unable to copy. Please copy the website URL from your browser.";
+  }
 });
 </script>
 </body>
